@@ -3,6 +3,7 @@ from lint.processors import QuarantineIndicator, NeverMaliciousDetector
 from lint.storage import StorageManager
 from result import Ok, Err, Result, is_ok, is_err
 
+import re
 import requests
 import xml.etree.ElementTree as ElementTree
 from datetime import datetime
@@ -10,6 +11,8 @@ from datetime import datetime
 # Constants required for the item-detection algorithm
 ITEM_OPENING = "<item>"
 ITEM_CLOSING = "</item>"
+
+XMLNS_REGEX = re.compile('xmlns:[A-Za-z0-9]+?=".*?"')
 
 class RssSourceRetriever:
     def get_items_xml(text: str) -> Result[list[str], ValueError]:
@@ -64,9 +67,12 @@ class RssSourceRetriever:
             # Load RSS file from source
             response = requests.get(source.uri)
             access_date = datetime.now()
+
+            item_with_xmlns = "<item {}>".format(" ".join(XMLNS_REGEX.findall(response.text)))
+
             # Parse as XML
             items_xml_result = RssSourceRetriever.get_items_xml(response.text)
-            
+
             # Ignore problems
             # TODO We can't just ignore all problems. There should be a problem resolution mechanism.
             if is_ok(items_xml_result):
@@ -74,7 +80,10 @@ class RssSourceRetriever:
                 items_xml = items_xml_result.ok_value
                 for item_xml in items_xml:
                     try:
-                        item_xml_parsed = ElementTree.fromstring(item_xml)
+                        # TODO This is a dirty hack to avoid the problems with missing namespaces
+                        #   and no long-term solution:
+                        # Simply append the missing namespaces to the item itself, by replacing it
+                        item_xml_parsed = ElementTree.fromstring(item_xml.replace("<item>", item_with_xmlns, 1))
                     except ElementTree.ParseError as e:
                         print(item_xml)
                         raise e
@@ -93,6 +102,8 @@ class RssSourceRetriever:
                     )
             else:
                 print(f"Error while processing source {source}: {items_xml_result.err_value}")
+        
+        return items
 
 
 class Lint:
@@ -104,4 +115,5 @@ class Lint:
 
     def fetch_items(self):
         items = self.retriever.fetch_items(self.sources, self.qi)
+        print(items)
 
