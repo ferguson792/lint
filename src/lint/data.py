@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import IntEnum
 from typing import Optional, Self
 from dataclasses import dataclass
 from datetime import datetime
@@ -7,11 +7,16 @@ SourceId = int
 ItemId = int
 ClassificationLevels = tuple[str, ...]
 
-class SourceType(Enum):
+class SourceType(IntEnum):
     RSS = 1
 
-class SourceStatus(Enum):
+class SourceStatus(IntEnum):
     LIVE = 1
+
+class ProcessingStatus(IntEnum):
+    UN_PROCESSED = 0
+    PRE_PROCESSED = 1
+    FULLY_PROCESSED = 2
 
 @dataclass
 class QuarantineStatus:
@@ -22,21 +27,15 @@ class QuarantineStatus:
         return QuarantineStatus(status & 0b10, status & 0b01)
 
     def to_int(self):
-        return (0b10 if sql_injection_detected else 0) | (0b01 if lm_injection_detected else 0)
+        return (0b10 if self.sql_injection_detected else 0) | (0b01 if self.lm_injection_detected else 0)
 
+@dataclass
 class Source:
     uid: Optional[SourceId]
     uri: str
     classification: ClassificationLevels
     type: SourceType
     status: SourceStatus
-
-    def __init__(self, uid: SourceId, uri: str):
-        self.uid = uid
-        self.uri = uri
-        self.classification = ("PUBLIC",)
-        self.type = SourceType.RSS
-        self.status = SourceStatus.LIVE
 
 @dataclass
 class Item:
@@ -45,12 +44,13 @@ class Item:
     as well as the unprocessed, i.e. raw, message content.
     """
     uid: Optional[ItemId]
-    link: str
+    link: Optional[str]
     guid: Optional[str]
     pub_date: Optional[str]
     raw_item: str
 
     source_uid: SourceId
-    access_date: datetime
+    access_date: datetime                   # TODO Might be better to rename this in "first_received_date"
     classification: ClassificationLevels
     quarantine_status: QuarantineStatus
+    processing_status: ProcessingStatus

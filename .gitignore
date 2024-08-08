@@ -1,5 +1,6 @@
 local-venv/
 .vscode
+test.db
 
 ### Python.gitignore ###
 

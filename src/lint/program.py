@@ -1,4 +1,4 @@
-from lint.data import Source, Item
+from lint.data import Source, SourceType, SourceStatus, Item, ProcessingStatus
 from lint.processors import QuarantineIndicator, NeverMaliciousDetector
 from lint.storage import StorageManager
 from result import Ok, Err, Result, is_ok, is_err
@@ -91,14 +91,14 @@ class RssSourceRetriever:
                     # We find only the first occurence of a tag.
                     # TODO Duplicate tags might indicate bozo RSS and should be at least flagged
                     # TODO If the link is none and guid is none we have a Uniqueness problem. Should we resort to the description or title?
-                    link = item_xml_parsed.find("link")
-                    guid = item_xml_parsed.find("guid")
-                    pub_date = item_xml_parsed.find("pubDate")
+                    link = item_xml_parsed.find("link").text
+                    guid = item_xml_parsed.find("guid").text
+                    pub_date = item_xml_parsed.find("pubDate").text
                     # TODO Classification is taken straight from the source. In the future, there should be a standard for that.
                     items.append(
                         Item(uid=None, link=link, guid=guid, pub_date=pub_date, raw_item=item_xml,
                         source_uid=source.uid, access_date=access_date, classification=source.classification,
-                        quarantine_status=quarantine_indicator.indicate_for_text(item_xml))
+                        quarantine_status=quarantine_indicator.indicate_for_text(item_xml), processing_status=ProcessingStatus.UN_PROCESSED)
                     )
             else:
                 print(f"Error while processing source {source}: {items_xml_result.err_value}")
@@ -107,13 +107,30 @@ class RssSourceRetriever:
 
 
 class Lint:
-    sources: tuple[Source,...] = (Source(0, "http://feeds.bbci.co.uk/news/science_and_environment/rss.xml"),)
+    sources: tuple[Source,...] = (
+        Source(None, "http://feeds.bbci.co.uk/news/science_and_environment/rss.xml", ("PUBLIC",), SourceType.RSS, SourceStatus.LIVE),)
+    items = []
 
-    sm: StorageManager = StorageManager()
+    sm: StorageManager = StorageManager("test.db")
     retriever = RssSourceRetriever()
     qi = QuarantineIndicator(NeverMaliciousDetector(), NeverMaliciousDetector())
 
     def fetch_items(self):
-        items = self.retriever.fetch_items(self.sources, self.qi)
-        print(items)
+        # Zeroeth step: Update sources
+        sources_update_result = self.sm.update_sources(self.sources)
+        if is_ok(sources_update_result):
+            self.sources = sources_update_result.ok_value
+
+            # First step: Retrieve items from sources
+            retrieved_items = self.retriever.fetch_items(self.sources, self.qi)
+            print(retrieved_items)
+
+            # Next step: Store (synchronize) those items in the database
+            items_sync_result = self.sm.synchronize_items(retrieved_items)
+            if is_ok(items_sync_result):
+                self.items = items_sync_result.ok_value
+                print()
+                print(self.items)
+        else:
+            raise sources_update_result.err_value
 
