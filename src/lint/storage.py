@@ -170,7 +170,7 @@ class StorageManager:
         for item in no_uid_items:
             serialized_classification = ",".join(item.classification)
 
-            parameters_find = (item.link, item.guid, item.pub_date, item.raw_item, item.source_uid, serialized_classification, item.quarantine_status.to_int())
+            parameters_find = (item.link, item.guid, item.pub_date, item.raw_item, item.source.uid, serialized_classification, item.quarantine_status.to_int())
             # Try and find a UID for the source
             result_row = cursor.execute(FIND_ITEM, parameters_find).fetchall()
             if not result_row:

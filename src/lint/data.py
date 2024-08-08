@@ -5,7 +5,13 @@ from datetime import datetime
 
 SourceId = int
 ItemId = int
+MessageId = int
+BriefId = int
+SummaryId = int
 ClassificationLevels = tuple[str, ...]
+# The cluster number is explicitly NOT an id, because the same number can refer
+# to different clusters depending on the generation batch number
+ClusterNumber = int
 
 class SourceType(IntEnum):
     RSS = 1
@@ -29,6 +35,9 @@ class QuarantineStatus:
     def to_int(self):
         return (0b10 if self.sql_injection_detected else 0) | (0b01 if self.lm_injection_detected else 0)
 
+class TopicVector:
+    value: tuple[float, ...]
+
 @dataclass
 class Source:
     uid: Optional[SourceId]
@@ -49,8 +58,46 @@ class Item:
     pub_date: Optional[str]
     raw_item: str
 
-    source_uid: SourceId
+    source: Source
     access_date: datetime                   # TODO Might be better to rename this in "first_received_date"
     classification: ClassificationLevels
     quarantine_status: QuarantineStatus
     processing_status: ProcessingStatus
+
+@dataclass
+class Message:
+    uid: Optional[MessageId]
+    item: Item
+    title: str
+    description: str
+    relevance: Optional[int]
+    relevance_context: Optional[str]  # Explicitly not '_explanation', because we can't describe the LLM's output as an "explanation";
+                                      # that would be incorrectly assuming meaning from form
+    topic_vector: Optional[TopicVector]
+    cluster: Optional[ClusterNumber]
+
+@dataclass
+class Brief:
+    uid: Optional[BriefId]
+    cutoff_date: datetime
+    viewback_ms: int
+    classification: ClassificationLevels
+    # These two prompts are (for now) used globally for each brief;
+    # however, this might lead to problems with the language model,
+    # and it might be that prompts must be adjusted to each cluster,
+    # and thereby also stored for each cluster. This would mean that
+    # the prompts would have to be stored for each summary,
+    # because one cluster corresponds to one summary.
+    prompt_relevance: str
+    prompt_summary: str
+
+@dataclass
+class Summary:
+    uid: Optional[SummaryId]
+    brief: Brief
+    generation_date: datetime
+    summary: str
+    cluster: ClusterNumber
+    classification: ClassificationLevels
+    source_items: tuple[Item, ...]
+    issued: bool

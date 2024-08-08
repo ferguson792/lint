@@ -97,7 +97,7 @@ class RssSourceRetriever:
                     # TODO Classification is taken straight from the source. In the future, there should be a standard for that.
                     items.append(
                         Item(uid=None, link=link, guid=guid, pub_date=pub_date, raw_item=item_xml,
-                        source_uid=source.uid, access_date=access_date, classification=source.classification,
+                        source=source, access_date=access_date, classification=source.classification,
                         quarantine_status=quarantine_indicator.indicate_for_text(item_xml), processing_status=ProcessingStatus.UN_PROCESSED)
                     )
             else:
@@ -133,4 +133,18 @@ class Lint:
                 print(self.items)
         else:
             raise sources_update_result.err_value
+
+    def generate_brief(self, cutoff_date: datetime, viewback_ms: int, ignore_pub_date: bool=False, ignore_processing_status: bool=False):
+        # Vorverarbeiten und in temporärer Nachrichten-Datenbank speichern
+        # Relevanz+Relevanz-Kontext und Themenvektor berechnen
+        # Clustern
+        # Summary erstellen
+        # Brief erstellen und speichern
+        raise NotImplementedError()
+
+    def preprocess_items(self):
+        """
+        Preprocesses those items which have been marked as UN_PROCESSED, and afterwards
+        sets their status to PRE_PROCESSED.
+        """
 
