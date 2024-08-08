@@ -1,13 +1,11 @@
 from lint.data import Source, Item
 from lint.processors import QuarantineIndicator, NeverMaliciousDetector
+from lint.storage import StorageManager
 from result import Ok, Err, Result, is_ok, is_err
 
 import requests
 import xml.etree.ElementTree as ElementTree
 from datetime import datetime
-
-class StorageManager:
-    pass
 
 # Constants required for the item-detection algorithm
 ITEM_OPENING = "<item>"
