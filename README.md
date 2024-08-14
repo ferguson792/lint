@@ -1,5 +1,6 @@
 # LINT
-> Version 0.1.0-bleeding0
+> Version `0.1.0-bleeding0`
+>
 > **WARNING:** This is a prototype. Proceed with caution and at your own risk.
 
 For detailed documentation, see [`docs/README.md`](docs/README.md).
