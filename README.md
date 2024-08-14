@@ -1,5 +1,6 @@
 # LINT
-> **WARNING:** The current version of LINT is a prototype. Proceed with caution and at your own risk.
+> Version 0.1.0-bleeding0
+> **WARNING:** This is a prototype. Proceed with caution and at your own risk.
 
 For detailed documentation, see [`docs/README.md`](docs/README.md).
 
@@ -57,7 +58,7 @@ Language model used for brief writing: Dummy
 
 1. (PUBLIC) Famous More Despair Rarely Two Reservoir Down They 400-year Water Witness World's X-rays Government Complex UK Oxygen Europe's Satellite Musk's Who
 Information cut off: 2024-08-14 14:13:26.367801
-Source(s): [1](https://www.bbc.com/news/articles/c207lqdn755o) [2](https://www.bbc.com/news/articles/cy4ldkpz1klo) [[+ 19 sources...]
+Source(s): [1](https://www.bbc.com/news/articles/c207lqdn755o) [2](https://www.bbc.com/news/articles/cy4ldkpz1klo) [+ 19 sources...]
 
 Stonehenge's Campaigners Local A The Studies The Two The Thames Rory A The The Scientists The The After A The A
 
@@ -76,6 +77,7 @@ liability is assumed for the correctness and completeness of the information.
 ## Copyright Notice
 
 LINT ("LLM-based Intelligence Analysis") is a secure, robust and open AI tool for automatically summarising open internet sources.
+
 Copyright (C) 2024  ferguson792, dickey154
 
 This program is free software: you can redistribute it and/or modify
