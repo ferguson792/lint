@@ -1,4 +1,4 @@
-from lint.data import Item, QuarantineStatus
+from lint.data import Item, QuarantineStatus, Message
 
 class MaliciousDetector:
     def is_malicious_item(self, item: Item) -> bool:
@@ -27,3 +27,32 @@ class QuarantineIndicator:
             sql_injection_detected=self.sql_inj_det.is_malicious_text(text),
             lm_injection_detected=self.lm_inj_det.is_malicious_text(text)
         )
+
+class RelevanceEstimator:
+    def estimate_relevance(self, message: Message) -> tuple[int, str]:
+        raise NotImplementedError()
+
+class DummyRelevanceEstimator(RelevanceEstimator):
+    """
+    This dummy estimator estimates everything as very relevant (100).
+    """
+    def estimate_relevance(self, message: Message) -> tuple[int, str]:
+        return 100, "dummy"
+
+class MessageSummarizer:
+    def summarize(self, cluster: tuple[Message, ...]) -> tuple[str, str]:
+        return NotImplementedError()
+
+class DummyMessageSummarizer(MessageSummarizer):
+    """
+    This dummy summarizer just pulls the first word from each title,
+    and the first word from each description, to generate the summary.
+    """
+    def summarize(self, cluster: tuple[Message, ...]) -> tuple[str, str]:
+        title_parts = []
+        content_parts = []
+        for message in cluster:
+            title_parts.append(message.title.split(' ', maxsplit=1)[0])
+            content_parts.append(message.description.split(' ', maxsplit=1)[0])
+
+        return (" ".join(title_parts), " ".join(content_parts))

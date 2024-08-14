@@ -59,7 +59,7 @@ class Item:
     raw_item: str
 
     source: Source
-    access_date: datetime                   # TODO Might be better to rename this in "first_received_date"
+    access_date: datetime                   # TODO Might be better to rename this in "first_received_date", and use a POSIX timestamp?
     classification: ClassificationLevels
     quarantine_status: QuarantineStatus
     processing_status: ProcessingStatus
@@ -79,8 +79,8 @@ class Message:
 @dataclass
 class Brief:
     uid: Optional[BriefId]
-    cutoff_date: datetime
-    viewback_ms: int
+    cutoff_date: datetime   # Cutoff date, stored as datetime
+    viewback_ms: int        # Viewback timespan in milliseconds
     classification: ClassificationLevels
     # These two prompts are (for now) used globally for each brief;
     # however, this might lead to problems with the language model,
@@ -90,12 +90,14 @@ class Brief:
     # because one cluster corresponds to one summary.
     prompt_relevance: str
     prompt_summary: str
+    # TODO Include language models used for summary and brief writing.
 
 @dataclass
 class Summary:
     uid: Optional[SummaryId]
     brief: Brief
-    generation_date: datetime
+    generation_date: int    # A POSIX timestamp
+    title: str
     summary: str
     cluster: ClusterNumber
     classification: ClassificationLevels

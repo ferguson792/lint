@@ -135,7 +135,7 @@ class StorageManager:
                 result_row = cursor.execute(INSERT_SOURCE, parameters)
 
             (inserted_uid,) = result_row
-            print("UID:", inserted_uid[0])
+            # print("UID:", inserted_uid[0])
             # Update uid
             source.uid = inserted_uid[0]
 
@@ -185,7 +185,7 @@ class StorageManager:
                 item.processing_status = stored_item_values[2]
 
             (inserted_uid,) = result_row
-            print("UID:", inserted_uid[0])
+            # print("UID:", inserted_uid[0])
             # Update uid
             item.uid = inserted_uid[0]
 
