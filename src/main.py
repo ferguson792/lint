@@ -49,8 +49,7 @@ liability is assumed for the correctness and completeness of the information.
 
 ================================================================================
                                 {brief.classification[0]}
-================================================================================
-""")
+================================================================================""")
 
 def display_text_gui(text: str):
     root = Tk()
@@ -81,8 +80,9 @@ def main():
         lint.fetch_items()
         brief, summaries = lint.generate_brief(cutoff_date=datetime.now(), viewback_ms=1000*60*60*48)
         text = dummy_brief_to_text(brief, summaries)
-
-        # TODO Show in window
+        # Output text on command line
+        print(text)
+        # Show in window
         display_text_gui(text)
     except BaseException as e:
         # TODO Handle exceptions
