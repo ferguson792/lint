@@ -218,3 +218,8 @@ test_llm.env/bin/uvicorn
 test_llm.env/bin/vllm
 test_llm.env/bin/watchfiles
 test_llm.env/share/man/man1/isympy.1
+test_llm.env/bin/fonttools
+test_llm.env/bin/pyftmerge
+test_llm.env/bin/pyftsubset
+test_llm.env/bin/ttx
+test_llm.env/share/man/man1/ttx.1
