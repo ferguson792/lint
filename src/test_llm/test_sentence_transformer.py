@@ -43,14 +43,34 @@ sentences = [
 # Calculate embeddings (aka tensor representation of the sentence) by calling model.encode()
 embeddings = model.encode(sentences)
 
+# Just for debugging:
+#np.set_printoptions(threshold=np.inf)
+#print(embeddings)
+
+#np.savetxt('embeddings.txt', embeddings)
+
+# Dimension of Embedings
+embedding_dimensionality = embeddings.shape[1]
+
+# calculates minimum needed for dimension reduction using PCA
+embeddings_samples, embedings_features = embeddings.shape
+embeddings_components = min(embeddings_samples, embedings_features)
+
+print("Shape embedding: ", embedding_dimensionality)
+
+
 # Reduce dimensionality to 2D for visualization
-pca = PCA(n_components=2)
-reduced_tensor = pca.fit_transform(embeddings)
+pca_visual = PCA(n_components=2)
+#pca_calculation = PCA(n_components=embeddings_components)
+#set to 2 because of better performance
+pca_calculation = PCA(n_components=2)
+reduced_tensor_visual = pca_visual.fit_transform(embeddings)
+reduced_tensor_calculation = pca_calculation.fit_transform(embeddings)
 
 # Fit MeanShift to the embeddings
 mean_shift = MeanShift()
 #TODO For some reason, mean_shift only works for the tensors reduced in dimension. Should also work on higher dimension, which is preferable as reducing dimensions reducies nounaces in the clasifiation.
-mean_shift.fit(reduced_tensor)
+mean_shift.fit(reduced_tensor_calculation)
 
 # Get the cluster labels
 labels = mean_shift.labels_
@@ -66,12 +86,12 @@ plt.figure(figsize=(10, 8))
 for i, label in enumerate(unique_labels):
     # Get the indices of the points belonging to the current label
     label_indices = np.where(labels == label)
-    plt.scatter(reduced_tensor[label_indices, 0], reduced_tensor[label_indices, 1],
+    plt.scatter(reduced_tensor_visual[label_indices, 0], reduced_tensor_visual[label_indices, 1],
                 color=colors(i), label=f'Cluster {label}', alpha=0.7)
 
 # Annotate each point with its corresponding index
-for i in range(reduced_tensor.shape[0]):
-    plt.annotate(i, (reduced_tensor[i, 0], reduced_tensor[i, 1]), fontsize=8, alpha=0.5)
+for i in range(reduced_tensor_calculation.shape[0]):
+    plt.annotate(i, (reduced_tensor_calculation[i, 0], reduced_tensor_calculation[i, 1]), fontsize=8, alpha=0.5)
 
 plt.title('PCA of High-Dimensional Tensor with MeanShift Clustering')
 plt.xlabel('Principal Component 1')
