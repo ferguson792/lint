@@ -1,5 +1,6 @@
 from lint.data import Source, SourceType, SourceStatus, Item, ProcessingStatus, Message, Brief, Summary
-from lint.processors import QuarantineIndicator, NeverMaliciousDetector, DummyRelevanceEstimator, DummyMessageSummarizer
+from lint.processors import QuarantineIndicator
+from lint.processors.dummy import DummyMaliciousDetector, DummyRelevanceEstimator, DummyMessageSummarizer
 from lint.storage import StorageManager
 from result import Ok, Err, Result, is_ok, is_err
 
@@ -120,7 +121,7 @@ class Lint:
 
     sm: StorageManager = StorageManager("test.db")
     retriever = RssSourceRetriever()
-    qi = QuarantineIndicator(NeverMaliciousDetector(), NeverMaliciousDetector())
+    qi = QuarantineIndicator(DummyMaliciousDetector(), DummyMaliciousDetector())
     relest = DummyRelevanceEstimator()
     summarizer = DummyMessageSummarizer()
 

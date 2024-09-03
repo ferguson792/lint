@@ -1,5 +1,5 @@
 # LINT
-> Version `0.1.0-bleeding.0`
+> Version `0.2.0-bleeding.0`
 >
 > **WARNING:** This is a prototype. Proceed with caution and at your own risk.
 
@@ -18,7 +18,7 @@ about "Science and Environment"). The date for information-cutoff is always the 
 To run LINT, you need to have the following components installed on your system:
 
 * Python 3.11 or higher
-    * [Python Libraries](#python libraries); see below ↓
+    * [Python Libraries](#python-libraries); see below ↓
 * [Make](https://en.wikipedia.org/wiki/Make_(software))
 
 ### Python Libraries
@@ -29,6 +29,16 @@ To install them via `pip`, run
 ```sh
 $ pip install result requests feedparser
 ```
+and
+```sh
+$ pip install -U sentence-transformers
+```
+
+If you want to query Mistral's online API, you will need to generate and store an API key and install the necessary client as well:
+```sh
+$ pip install mistralai
+```
+See <https://github.com/mistralai/client-python> for more information.
 
 ### Running the program
 To run LINT, simply execute
