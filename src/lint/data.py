@@ -15,6 +15,7 @@ ClusterNumber = int
 
 class SourceType(IntEnum):
     RSS = 1
+    ATOM = 2
 
 class SourceStatus(IntEnum):
     LIVE = 1
