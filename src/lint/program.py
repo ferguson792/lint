@@ -76,6 +76,7 @@ class Lint(XmlConfigurable):
             debug_output = text_to_bool(find_single(root, "debug-output", must_exist=False).text)
         except ValueError as err:
             raise ConfigurationError(f"Unknown value for <debug-output>: {err}", err)
+        logging.basicConfig(encoding='utf-8', level=(logging.DEBUG if debug_output else logging.INFO), format=_LOG_FORMAT)
         
         # Root node for briefing configuration
         briefing_node = find_single(root, "briefing")
@@ -156,29 +157,43 @@ class Lint(XmlConfigurable):
             preprocess_item(item)
             for item in self.items if predicate(item)]
 
-    def generate_brief(self, cutoff_date: datetime, viewback_ms: int, relevance_threshold: int=50, ignore_pub_date: bool=False, ignore_processing_status: bool=False) -> tuple[Brief, tuple[Summary, ...]]:
+    def generate_brief(self, cutoff_date: datetime) -> tuple[Brief, tuple[Summary, ...]]:
+        params: BriefingParameters = self.briefing_parameters
+
         # TODO Clear temporary database table for messages
         # Preprocess items and store in temporary message database
-        messages = self._preprocess_items(cutoff_date, viewback_ms, ignore_pub_date, ignore_processing_status)
-        # Estimate relevance (with context) and topic vector
-        for message in messages:
-            relevance, relevance_context = self.estimator.estimate_relevance(message)
-            message.relevance = relevance
-            message.relevance_context = relevance_context
-            # TODO Remove this dummy statement
-            message.cluster = 0
-        # TODO Update result in storage
-        # TODO Cluster, based on topic vector (with relevance)
-        # TODO Update result in storage
-        # TODO It might be beneficial to adjust relevance for each cluster?
-        # Create a Brief object
-        brief = Brief(uid=None, cutoff_date=cutoff_date, viewback_ms=viewback_ms, classification=("PUBLIC",), prompt_relevance="", prompt_summary="")
-        # Create summaries for each cluster
-        title, summary_text = self.summarizer.summarize(messages)
-        summary = Summary(
-            uid=None, brief=brief, generation_date=(time.time_ns() // 1_000_000),
-            title=title, summary=summary_text, cluster=0, classification="PUBLIC",
-            source_items=self.items, issued=False)
+        messages = self._preprocess_items(cutoff_date, params.viewback_ms, params.ignore_pub_date, params.ignore_processing_status)
+        
+        # Create a Brief for each topic.        # TODO Should it be like that?
+        for topic in params.topics:
+            topic_desc = topic.description
+
+            # Estimate relevance (with context) and cluster
+            for message in messages:
+                relevance, relevance_context = self.estimator.estimate_relevance(topic_desc, message)
+                message.relevance = relevance
+                message.relevance_context = relevance_context
+
+                # TODO Replace this dummy statement with real clustering
+                message.cluster = 0
+            # TODO Update result in storage
+            # TODO Cluster, based on topic vector (with relevance)
+            # TODO Update result in storage
+            # TODO It might be beneficial to adjust relevance for each cluster?
+
+            # TODO The relevance threshold should also be stored...
+            brief = Brief(
+                uid=None,
+                cutoff_date=cutoff_date, viewback_ms=params.viewback_ms,
+                classification=("PUBLIC",),
+                prompt_relevance=self.estimator.get_prompt(topic_desc), prompt_summary=self.summarizer.get_prompt(topic_desc)
+            )
+            # Create summaries for each cluster
+            title, summary_text = self.summarizer.summarize(topic_desc, messages)
+            summary = Summary(
+                uid=None, brief=brief, generation_date=(time.time_ns() // 1_000_000),
+                title=title, summary=summary_text, cluster=0, classification="PUBLIC",
+                source_items=self.items, issued=False)
 
         # TODO Create and store brief in database
 

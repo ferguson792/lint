@@ -2,6 +2,8 @@ local-venv/
 .vscode
 test.db
 
+sample/*/api-token.txt
+
 ### Python.gitignore ###
 
 # Byte-compiled / optimized / DLL files

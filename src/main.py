@@ -87,7 +87,7 @@ def main():
         # TODO: Create a loading stage, where configuration and sources are loaded (subroutines)
         lint = Lint.from_xml(ET.parse('config.xml').getroot())
         lint.fetch_items()
-        brief, summaries = lint.generate_brief(cutoff_date=datetime.now(), viewback_ms=1000*60*60*48)
+        brief, summaries = lint.generate_brief(cutoff_date=datetime.now())
         text = dummy_brief_to_text(brief, summaries)
         # Output text on command line
         print(text)

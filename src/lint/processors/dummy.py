@@ -27,9 +27,13 @@ class DummyRelevanceEstimator(RelevanceEstimator):
     This dummy estimator estimates everything as very relevant (100).
     """
 
-    def estimate_relevance(self, message: Message) -> tuple[int, str]:
+    def estimate_relevance(self, topic: str, message: Message) -> tuple[int, str]:
         return 100, "dummy"
     
+    #override
+    def get_prompt(self, topic: str) -> str:
+        return "DUMMY"
+
     #override
     @classmethod
     def get_type(cls) -> str:
@@ -64,7 +68,7 @@ class DummyMessageSummarizer(MessageSummarizer):
     and the first word from each description, to generate the summary.
     """
 
-    def summarize(self, cluster: tuple[Message, ...]) -> tuple[str, str]:
+    def summarize(self, topic: str, cluster: tuple[Message, ...]) -> tuple[str, str]:
         title_parts = []
         content_parts = []
         for message in cluster:
@@ -73,6 +77,9 @@ class DummyMessageSummarizer(MessageSummarizer):
 
         return (" ".join(title_parts), " ".join(content_parts))
     
+    def get_prompt(self, topic: str):
+        return "DUMMY"
+
     #override
     @classmethod
     def get_type(cls) -> str:

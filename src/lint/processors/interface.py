@@ -6,7 +6,7 @@ from lint.configuration import *
 class Processor(XmlConfigurable):
     @classmethod
     def get_type(cls) -> str:
-        raise NotImplementedError()
+        raise NotImplementedError(f"get_type() not implemented for {cls}")
 
     #override
     @classmethod
@@ -36,7 +36,10 @@ class RelevanceEstimator(Processor):
     """
     available_types: ClassVar[list[type]] = []
 
-    def estimate_relevance(self, message: Message) -> tuple[int, str]:
+    def estimate_relevance(self, topic: str, message: Message) -> tuple[int, str]:
+        raise NotImplementedError()
+    
+    def get_prompt(self, topic: str) -> str:
         raise NotImplementedError()
 
 
@@ -60,5 +63,8 @@ class MessageSummarizer(Processor):
     """
     available_types: ClassVar[list[type]] = []
 
-    def summarize(self, cluster: tuple[Message, ...]) -> tuple[str, str]:
+    def summarize(self, topic: str, cluster: tuple[Message, ...]) -> tuple[str, str]:
+        return NotImplementedError()
+    
+    def get_prompt(self, topic: str) -> str:
         return NotImplementedError()
