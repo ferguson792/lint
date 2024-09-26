@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <debug-output>true</debug-output>
+
+    <quarantine>
+        <sql-injection>
+            <detector type="dummy"/>
+        </sql-injection>
+        <prompt-injection>
+            <detector type="dummy"/>
+        </prompt-injection>
+    </quarantine>
+
+    <harmonization>
+        <sources>
+        </sources>
+        
+        <items>
+        </items>
+    </harmonization>
+
+    <briefing>
+        <parameters>
+            <!-- The viewback time frame (from the current moment), in milliseconds. -->
+            <viewback-ms>172800000 <!-- 48 hours = 1000*60*60*48 ms --></viewback-ms>
+
+            <!-- Ignoring the publication date might be useful if such dates are faulty, for some reason. -->
+            <ignore-publication-date>true</ignore-publication-date>
+            <!-- Ignoring processing status might be desirable when something went wrong with the last brief. -->
+            <!-- Ignoring this status means all source items are gathered for the brief, even if they have already been processed. -->
+            <!-- (In the future, this might even become a flag, or processing status might be removed altogether.) -->
+            <ignore-processing-status>true</ignore-processing-status>
+
+            <topics>
+                <topic description="disinformation" relevance-threshold="0"/>
+            </topics>
+        </parameters>
+
+        <relevance>
+            <processor type="dummy"/>
+        </relevance>
+
+        <categorization>
+            <processor type="dummy"/>
+        </categorization>
+
+        <!-- The following types are available: lm-based, dummy -->
+        <summary>
+            <processor type="dummy"/>
+        </summary>
+    </briefing>
+</lint>

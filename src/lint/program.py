@@ -1,29 +1,100 @@
-from lint.data import Source, SourceType, SourceStatus, Item, ProcessingStatus, Message, Brief, Summary
-from lint.processors import QuarantineIndicator
-from lint.processors.dummy import DummyMaliciousDetector, DummyRelevanceEstimator, DummyMessageSummarizer
-from lint.storage import StorageManager
-import lint.subroutines.retrieval as retrieval
 from result import Ok, Err, Result, is_ok, is_err
-
 from datetime import datetime
 import time
+import logging
+from typing import Self
 
 import feedparser
 
+from lint.configuration import *
+
+from lint.data import Source, SourceType, SourceStatus, Item, ProcessingStatus, Message, Brief, Summary
+from lint.processors import *
+from lint.storage import StorageManager
+import lint.subroutines.retrieval as retrieval
 
 def datetime_to_posix_timestamp(date_time: datetime) -> int:
     return int(time.mktime(date_time.timetuple()))
 
+_LOG_FORMAT = '[%(asctime)s %(levelname)s:%(name)s] %(message)s'
+_DEBUG_OUTPUT_DEFAULT_VALUE: bool = False
 
-class Lint:
-    sources: tuple[Source,...] = (
-        Source(None, "http://feeds.bbci.co.uk/news/science_and_environment/rss.xml", ("PUBLIC",), SourceType.RSS, SourceStatus.LIVE),)
-    items = []
+class Lint(XmlConfigurable):
+    logger = logging.getLogger(__name__)
 
+    sources: tuple[Source,...] = []
+    items: list[Item] = []
+
+    # TODO Wouldn't it be better if the StorageManager controlled the items?
     store: StorageManager = StorageManager("test.db")
-    qi = QuarantineIndicator(DummyMaliciousDetector(), DummyMaliciousDetector())
-    relest = DummyRelevanceEstimator()
-    summarizer = DummyMessageSummarizer()
+    
+    qi: QuarantineIndicator
+    briefing_parameters: BriefingParameters
+    categorizer: MessageCategorizer
+    estimator: RelevanceEstimator
+    summarizer: MessageSummarizer
+
+    def __init__(self,
+                 quarantine_indicator: QuarantineIndicator,
+                 briefing_parameters: BriefingParameters,
+                 estimator: RelevanceEstimator,
+                 categorizer: MessageCategorizer,
+                 summarizer: MessageSummarizer,
+                 debug_output: bool=_DEBUG_OUTPUT_DEFAULT_VALUE):
+        # Set the logging level based on the configuration
+        # (This has to be the first instruction, because a  lot of logging will happen during the configuration...)
+        logging.basicConfig(encoding='utf-8', level=(logging.DEBUG if debug_output else logging.INFO), format=_LOG_FORMAT)
+
+        # Set the processor objects
+        self.qi = quarantine_indicator
+        self.estimator = estimator
+        self.categorizer = categorizer
+        self.summarizer = summarizer
+
+        # Briefing
+        self.briefing_parameters = briefing_parameters
+    
+    @classmethod
+    def get_xml_tag(cls) -> str:
+        return "lint"
+
+    @classmethod
+    def from_xml(cls, root: ET.Element) -> Self:
+        """
+        Loading a configuration works by interpreting the tree recursively.
+        Each sub-configuration is responsible for interpreting its own part of the tree.
+        """
+        Lint.logger.debug("Applying configuration...")
+
+        # Check whether the root tag is correct
+        if root.tag != "lint":
+            raise ConfigurationError(f"Root tag is not <lint>: {root.tag}")
+        
+        # Check whether debug output is configured
+        debug_output = _DEBUG_OUTPUT_DEFAULT_VALUE
+        try:
+            debug_output = text_to_bool(find_single(root, "debug-output", must_exist=False).text)
+        except ValueError as err:
+            raise ConfigurationError(f"Unknown value for <debug-output>: {err}", err)
+        
+        # Root node for briefing configuration
+        briefing_node = find_single(root, "briefing")
+
+        def instantiate_processor(node: ET.Element, surrounding_node: str, available_types: list):
+            return instantiate_type_from_xml(find_single(find_single(node, surrounding_node), "processor"), available_types)
+
+        lint = Lint(
+            quarantine_indicator = QuarantineIndicator.from_xml(find_single(root, "quarantine")),
+            briefing_parameters = BriefingParameters.from_xml(find_single(briefing_node, "parameters")),
+            estimator = instantiate_processor(briefing_node, "relevance", RelevanceEstimator.available_types),
+            categorizer = instantiate_processor(briefing_node, "categorization", MessageCategorizer.available_types),
+            summarizer = instantiate_processor(briefing_node, "summary", MessageSummarizer.available_types),
+            debug_output = debug_output
+        )
+
+        Lint.logger.debug("Configuration has been applied.")
+
+        return lint
 
     def fetch_items(self):
         # Zeroeth step: Update sources
@@ -85,14 +156,13 @@ class Lint:
             preprocess_item(item)
             for item in self.items if predicate(item)]
 
-
     def generate_brief(self, cutoff_date: datetime, viewback_ms: int, relevance_threshold: int=50, ignore_pub_date: bool=False, ignore_processing_status: bool=False) -> tuple[Brief, tuple[Summary, ...]]:
         # TODO Clear temporary database table for messages
         # Preprocess items and store in temporary message database
         messages = self._preprocess_items(cutoff_date, viewback_ms, ignore_pub_date, ignore_processing_status)
         # Estimate relevance (with context) and topic vector
         for message in messages:
-            relevance, relevance_context = self.relest.estimate_relevance(message)
+            relevance, relevance_context = self.estimator.estimate_relevance(message)
             message.relevance = relevance
             message.relevance_context = relevance_context
             # TODO Remove this dummy statement

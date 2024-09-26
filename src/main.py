@@ -1,5 +1,8 @@
 #!/bin/python3
 
+import logging
+import xml.etree.ElementTree as ET
+
 from lint import Lint
 from datetime import datetime
 from lint.data import Brief, Summary
@@ -13,6 +16,7 @@ def dummy_brief_to_text(brief: Brief, summaries: tuple[Summary,...]) -> str:
     summary = summaries[0]
 
     # TODO: Problem: Item has no title.
+    # TODO: Move this to the Brief class
 
     return (
 f"""================================================================================
@@ -74,19 +78,26 @@ def display_text_gui(text: str):
 
     root.mainloop()
 
+def load_opml():
+    pass
+
 def main():
+    logger = logging.getLogger(__name__)
     try:
-        lint = Lint()
+        # TODO: Create a loading stage, where configuration and sources are loaded (subroutines)
+        lint = Lint.from_xml(ET.parse('config.xml').getroot())
         lint.fetch_items()
         brief, summaries = lint.generate_brief(cutoff_date=datetime.now(), viewback_ms=1000*60*60*48)
         text = dummy_brief_to_text(brief, summaries)
         # Output text on command line
         print(text)
-        # Show in window
-        display_text_gui(text)
-    except BaseException as e:
-        # TODO Handle exceptions
-        raise e
+        # Show in window (currently unused)
+        # display_text_gui(text)
+    except BaseException as err:
+        logger.critical('Program will abort due to critical error:', exc_info=True)
+        # This basic print message is just to ensure that the user will get the message,
+        # as a redundancy
+        print('Aborting program...')
 
 # Only execute the main function if this file is run as a script
 if __name__ == "__main__":

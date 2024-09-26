@@ -1,41 +1,64 @@
-from lint.data import Item, QuarantineStatus, Message
+from typing import Self, ClassVar
 
-class MaliciousDetector:
+from lint.data import Item, QuarantineStatus, Message
+from lint.configuration import *
+
+class Processor(XmlConfigurable):
+    @classmethod
+    def get_type(cls) -> str:
+        raise NotImplementedError()
+
+    #override
+    @classmethod
+    def get_xml_tag(cls):
+        return "processor"
+
+class MaliciousDetector(Processor):
     """
     This class encapsulates the functionality required to (attempt to) detect malicious messages,
     and is used to detect both Language Model (aka "Prompt") as well as SQL injections in given text.
     """
-    def is_malicious_item(self, item: Item) -> bool:
-        return self.is_malicious_text(item.raw_item)
-    
+    available_types: ClassVar[list[type]] = []
+
     def is_malicious_text(self, text: str) -> bool:
         raise NotImplementedError()
 
-class QuarantineIndicator:
-    sql_inj_det: MaliciousDetector
-    lm_inj_det: MaliciousDetector
+    #override
+    @classmethod
+    def get_xml_tag(cls) -> str:
+        return "detector"
 
-    def __init__(self, sql_inj_det: MaliciousDetector, lm_inj_det: MaliciousDetector):
-        self.sql_inj_det = sql_inj_det
-        self.lm_inj_det = lm_inj_det
-    
-    def indicate_for_text(self, text: str) -> QuarantineStatus:
-        return QuarantineStatus(
-            sql_injection_detected=self.sql_inj_det.is_malicious_text(text),
-            lm_injection_detected=self.lm_inj_det.is_malicious_text(text)
-        )
 
-class RelevanceEstimator:
+class RelevanceEstimator(Processor):
     """
     The RelevanceEstimator is used to estimate the relevance
     of a given message for a topic.
     """
+    available_types: ClassVar[list[type]] = []
+
     def estimate_relevance(self, message: Message) -> tuple[int, str]:
         raise NotImplementedError()
 
-class MessageSummarizer:
+
+class MessageCategorizer(Processor):
+    """
+    The MessageCategorizer takes messages and turns them into clusters.
+    A message can be in more than one cluster.
+    """
+    available_types: ClassVar[list[type]] = []
+
+    def cluster(self, messages: list[Message]) -> list[tuple[Message, ...]]:
+        raise NotImplementedError()
+    
+    @classmethod
+    def get_xml_tag(cls):
+        return "processor"
+
+class MessageSummarizer(Processor):
     """
     The MessageSummarizer is supposed to summarize a cluster of messages.
     """
+    available_types: ClassVar[list[type]] = []
+
     def summarize(self, cluster: tuple[Message, ...]) -> tuple[str, str]:
         return NotImplementedError()
