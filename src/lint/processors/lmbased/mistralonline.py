@@ -10,7 +10,6 @@ from mistralai import Mistral
 class MistralClientModel(LanguageModel):
     logger = logging.getLogger(__name__)
 
-
     def __init__(self, properties: dict[str, str]):
         self.model_name: str = properties['name']
         
@@ -39,6 +38,10 @@ class MistralClientModel(LanguageModel):
             ]
         )
         return chat_response.choices[0].message.content
+
+    #override
+    def get_config_notice(self) -> str:
+        return f"{super().get_config_notice()}:{self.model_name}"
 
     #override
     @classmethod

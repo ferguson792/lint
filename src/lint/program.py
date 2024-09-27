@@ -198,16 +198,17 @@ class Lint(XmlConfigurable):
             cutoff_date=cutoff_date, viewback_ms=params.viewback_ms,
             classification=("PUBLIC",),
             topic_descriptions=brief_topics,
-            # TODO It would be better to just store the prompt templates, instead of the filled out prompts!
-            #   Even better would be a simple signature!
-            prompt_relevance=self.estimator.get_prompt(summary_topics),
-            prompt_summary=self.summarizer.get_prompt(summary_topics)
+            config_notice="\n".join((
+                f"Relevance Estimation: {self.estimator.get_config_notice()}",
+                f"Categorization: {self.categorizer.get_config_notice()}",
+                f"Summarization: {self.summarizer.get_config_notice()}"
+            ))
         )
 
         # Create summaries for each cluster
         summaries = []
         for cluster in clusters:
-            title, summary_text = self.summarizer.summarize(topic_desc, cluster)
+            title, summary_text = self.summarizer.summarize(summary_topics, cluster)
             summary = Summary(
                 uid=None, brief=brief, generation_date=(time.time_ns() // 1_000_000),
                 # TODO Resolve classification by some mechanism...

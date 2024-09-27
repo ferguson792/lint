@@ -1,10 +1,15 @@
+from abc import ABC, abstractmethod
 from typing import Self, ClassVar
 
 from lint.data import Item, QuarantineStatus, Message
 from lint.configuration import *
 
 class Processor(XmlConfigurable):
+    def get_config_notice(self) -> str:
+        return self.__class__.get_type()
+
     @classmethod
+    @abstractmethod
     def get_type(cls) -> str:
         raise NotImplementedError(f"get_type() not implemented for {cls}")
 

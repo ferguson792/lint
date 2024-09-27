@@ -105,9 +105,8 @@ class Brief:
     # TODO Brief should include more metadata, i.e. the full processor _signature_ (type + parameters)
     # for all stages (categorization, etc.)
     # TODO Store number of clusters
-    prompt_relevance: str
-    prompt_summary: str
-    # TODO Include language models used for summary and brief writing.
+
+    config_notice: str
 
     # TODO Create a helper method to create from briefing parameters?
 

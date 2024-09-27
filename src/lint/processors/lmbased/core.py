@@ -81,11 +81,15 @@ class LmBasedRelevanceEstimator(RelevanceEstimator):
             except ValueError as err:
                 logger.error(f"Bad response: {response}")
                 raise ModelOutputError(f"Model response score is not an integer: {parts[0]}", err)
-    
+
     #override
     def get_prompt(self, topic: str):
         return self.relevance_prompt.with_topic(topic)
     
+    #override
+    def get_config_notice(self) -> str:
+        return f"{super().get_config_notice()}:{self.model.get_type()}"
+
     @classmethod
     def get_type(cls) -> str:
         return _LM_BASED
@@ -135,6 +139,10 @@ class LmBasedMessageSummarizer(MessageSummarizer):
     def get_prompt(self, topic: str):
         return self.body_prompt.with_topic(topic)
     
+    #override
+    def get_config_notice(self) -> str:
+        return f"{super().get_config_notice()}:({self.head_model.get_config_notice()} | {self.body_model.get_config_notice()})"
+
     @classmethod
     def get_type(cls) -> str:
         return _LM_BASED

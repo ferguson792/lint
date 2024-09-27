@@ -31,8 +31,7 @@ This brief consists of {num_summaries} summaries.
 
 Information cut off: {cutoff_date}
 
-Language model used for categorisation: TODO
-Language model used for brief writing: TODO
+{config_notice}
 
 --------------------------------------------------------------------------------
 --      START OF LINT SUMMARY. {datetime}                     --
@@ -82,6 +81,7 @@ def dummy_brief_to_text(brief: Brief, summaries: tuple[Summary,...]) -> str:
         classification=center_text(TEMPLATE_COLUMN_WIDTH, "//".join(brief.classification)),
         topics=center_text(TEMPLATE_COLUMN_WIDTH, brief.topic_descriptions),
         num_summaries=len(summaries),
+        config_notice=brief.config_notice,
         datetime=datetime.now(),
         cutoff_date=brief.cutoff_date,
         summaries="".join([SUMMARY_TEMPLATE.format(
