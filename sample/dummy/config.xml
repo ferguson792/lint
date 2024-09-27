@@ -44,11 +44,7 @@
         </relevance>
 
         <categorization>
-            <!-- TODO Revert to "dummy" as soon as sentence transformer testing is over. -->
-            <!-- TODO Allow specifying the model in the processor... -->
-            <processor type="sentence-transformer">
-                <model type="all-MiniLM-L6-v2"/>
-            </processor>
+            <processor type="dummy"/>
         </categorization>
 
         <!-- The following types are available: lm-based, dummy -->

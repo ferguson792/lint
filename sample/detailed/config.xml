@@ -55,7 +55,9 @@
         </relevance>
 
         <categorization>
-            <processor type="dummy"/>
+            <processor type="sentence-transformer">
+                <model type="all-MiniLM-L6-v2"/>
+            </processor>
         </categorization>
 
         <!-- The following types are available: lm-based, dummy -->
