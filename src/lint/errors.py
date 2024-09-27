@@ -4,3 +4,9 @@ class ConfigurationError(Exception):
     (e.g. an unknown value or configuration field).
     """
     pass
+
+class ModelOutputError(RuntimeError):
+    """
+    This error occurs when the response of a model is wrong in some way.
+    """
+    pass

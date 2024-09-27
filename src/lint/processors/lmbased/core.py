@@ -5,6 +5,7 @@ import logging
 from lint.data import Message
 from lint.processors import RelevanceEstimator, MessageSummarizer, Processor
 from lint.configuration import *
+from lint.errors import ModelOutputError
 
 _LM_BASED = "lm-based"
 
@@ -49,6 +50,7 @@ class LanguageModel(Processor):
         return properties
 
 class LmBasedRelevanceEstimator(RelevanceEstimator):
+    logger = logging.getLogger(__name__)
 
     def __init__(self, model: LanguageModel, relevance_prompt: str, context_separator: str):
         self.model: LanguageModel = model
@@ -56,9 +58,29 @@ class LmBasedRelevanceEstimator(RelevanceEstimator):
         self.context_separator: str = context_separator
     
     def estimate_relevance(self, topic: str, message: Message) -> tuple[int, str]:
-        # TODO Process response instead of raising an error!
-        # self.model.query("\n\n".join((self.relevance_prompt, message.title, message.description)))
-        raise NotImplementedError()
+        response = self.model.query(
+            "\n\n".join((
+                self.relevance_prompt.with_topic(topic),
+                message.title, message.description
+                )))
+        
+        # Split response based on the context separator and raise an error if the response is malformatted
+        parts = response.split(self.context_separator)
+
+        if len(parts) != 2:
+            if len(parts) < 2:
+                raise ModelOutputError(f"Model response contains no context separator: {response}") 
+            else:   # len(parts) > 2
+                raise ModelOutputError(f"Model response contains more than one context separator: {response}")
+        else:
+            try:
+                score = int(parts[0])
+                context = parts[1]
+
+                return score, context
+            except ValueError as err:
+                logger.error(f"Bad response: {response}")
+                raise ModelOutputError(f"Model response score is not an integer: {parts[0]}", err)
     
     #override
     def get_prompt(self, topic: str):
