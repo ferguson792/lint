@@ -17,12 +17,13 @@ from tkinter.ttk import Scrollbar
 def print_err(obj):
     print(obj, file=sys.stderr)
 
+TEMPLATE_COLUMN_WIDTH=80
 BRIEF_TEMPLATE="""
 ================================================================================
-                                {classification}
+{classification}
 ================================================================================
-                LLM-Based Intelligence Analysis (LINT) Brief Regarding
-                                Climate Change
+             LLM-Based Intelligence Analysis (LINT) Brief Regarding
+{topics}
 
 
 This brief consists of {num_summaries} summaries.
@@ -45,7 +46,7 @@ This LLM-generated brief does not replace human analysis. Neither guarantee nor
 liability is assumed for the correctness and completeness of the information.
 
 ================================================================================
-                                {classification}
+{classification}
 ================================================================================
 """
 
@@ -57,13 +58,29 @@ Source Item(s): {items}
 {summary}
 """
 
+SPACE = ' '
+def center_text(column_width: int, text: str) -> str:
+    if len(text) > column_width:
+        return text
+    else:
+        diff = column_width - len(text)
+        half_diff = diff // 2
+
+        # Difference is either: Even (symmetric), Odd (asymmetric / left-aligned)
+        return "".join((
+            SPACE * (half_diff if diff % 2 == 0 else half_diff-1),
+            text,
+            SPACE * half_diff
+            ))
+
 # TODO This is a temporary ""function and should be replaced as soon as possible
 def dummy_brief_to_text(brief: Brief, summaries: tuple[Summary,...]) -> str:
     
     # TODO: Problem: Item has no title (for sources).
 
     return BRIEF_TEMPLATE.format(
-        classification="//".join(brief.classification),
+        classification=center_text(TEMPLATE_COLUMN_WIDTH, "//".join(brief.classification)),
+        topics=center_text(TEMPLATE_COLUMN_WIDTH, brief.topic_descriptions),
         num_summaries=len(summaries),
         datetime=datetime.now(),
         cutoff_date=brief.cutoff_date,

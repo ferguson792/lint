@@ -95,6 +95,7 @@ class Brief:
     viewback_ms: int        # Viewback timespan in milliseconds
     classification: ClassificationLevels    # Classification levels will probably be stored in their own table...
     # TODO Include the Brief's focus (combination of topics), e.g. "disinformation / climate change / fossil fuels"
+    topic_descriptions: str
     # These two prompts are (for now) used globally for each brief;
     # however, this might lead to problems with the language model,
     # and it might be that prompts must be adjusted to each cluster,
@@ -107,6 +108,8 @@ class Brief:
     prompt_relevance: str
     prompt_summary: str
     # TODO Include language models used for summary and brief writing.
+
+    # TODO Create a helper method to create from briefing parameters?
 
 @dataclass
 class Summary:

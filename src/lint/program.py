@@ -187,13 +187,23 @@ class Lint(XmlConfigurable):
         # TODO Cluster, based on topic vector (with relevance)
         clusters = self.categorizer.cluster(relevant_messages)
         
+        summary_topics = params.join_topics_for_prompt()
+        brief_topics = params.topics_to_str()
+
         # TODO The relevance threshold should also be stored...
+        # TODO In the future, based on whether batch relevance checking occured,
+        #   the relevance prompt should be filled out, and not a template
         brief = Brief(
             uid=None,
             cutoff_date=cutoff_date, viewback_ms=params.viewback_ms,
             classification=("PUBLIC",),
-            prompt_relevance=self.estimator.get_prompt(topic_desc), prompt_summary=self.summarizer.get_prompt(topic_desc)
+            topic_descriptions=brief_topics,
+            # TODO It would be better to just store the prompt templates, instead of the filled out prompts!
+            #   Even better would be a simple signature!
+            prompt_relevance=self.estimator.get_prompt(summary_topics),
+            prompt_summary=self.summarizer.get_prompt(summary_topics)
         )
+
         # Create summaries for each cluster
         summaries = []
         for cluster in clusters:

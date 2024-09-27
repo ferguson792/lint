@@ -49,7 +49,15 @@ class BriefingParameters(XmlConfigurable):
     ignore_pub_date: bool
     ignore_processing_status: bool
 
+    join_with: str
+
     topics: list[Topic]
+
+    def join_topics_for_prompt(self) -> str:
+        return self.join_with.join([topic.description for topic in self.topics])
+    
+    def topics_to_str(self) -> str:
+        return " / ".join([topic.description for topic in self.topics])
 
     @classmethod
     def get_xml_tag(cls) -> str:
@@ -59,12 +67,14 @@ class BriefingParameters(XmlConfigurable):
     def from_xml(cls, node: ET.Element) -> Self:
         # Should have exactly four sub-nodes: viewback-ms, ignore-publication-date, ignore-processing-status, topics
         try:
-            topics = [Topic.from_xml(topic_node) for topic_node in find_single(node, "topics")]
+            topics_node = find_single(node, "topics")
+            topics = [Topic.from_xml(topic_node) for topic_node in topics_node]
+
             return BriefingParameters(
                 viewback_ms = int(find_single(node, 'viewback-ms').text),
                 ignore_pub_date = text_to_bool(find_single(node, "ignore-publication-date").text),
                 ignore_processing_status = text_to_bool(find_single(node, "ignore-processing-status").text),
-
+                join_with = get_attrib_or_err(topics_node, "join-with"),
                 topics = topics
             )
         except ValueError as err:

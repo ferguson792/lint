@@ -32,7 +32,7 @@
             <ignore-processing-status>true</ignore-processing-status>
 
             <!-- Since the dummy processors are very quick, we can specify a lot of topics. -->
-            <topics>
+            <topics join-with=" or ">
                 <topic description="disinformation" relevance-threshold="0"/>
                 <topic description="climate change" relevance-threshold="0"/>
                 <topic description="fossil fuels" relevance-threshold="0"/>
