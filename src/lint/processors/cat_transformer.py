@@ -10,13 +10,15 @@ import numpy as np
 
 from lint.processors.interface import MessageCategorizer
 from lint.data import Message
+from lint.configuration import get_attrib_or_err, find_single
 
 class SentenceTransformerCategorizer(MessageCategorizer):
     logger = logging.getLogger(__name__)
 
-    def __init__(self):
+    def __init__(self, model_name: str):
+        self.model_name = model_name
         # Load a pretrained Sentence Transformer model
-        self.model = SentenceTransformer("all-MiniLM-L6-v2")
+        self.model = SentenceTransformer(model_name)
 
     def cluster(self, messages: list[Message]) -> list[tuple[Message, ...]]:
         self.logger.debug(f"Received {len(messages)} messages for clustering")
@@ -85,6 +87,10 @@ class SentenceTransformerCategorizer(MessageCategorizer):
         return [tuple(labeled_clusters[i]) for i in range(num_clusters)]
 
     #override
+    def get_config_notice(self) -> str:
+        return f"{super().get_config_notice()}:{self.model_name}"
+
+    #override
     @classmethod
     def get_type(cls) -> str:
         return "sentence-transformer"
@@ -92,5 +98,5 @@ class SentenceTransformerCategorizer(MessageCategorizer):
     #override
     @classmethod
     def from_xml(cls, node: ET.Element) -> Self:
-        # TODO Allow the model to be configured via the sentence transformer...
-        return SentenceTransformerCategorizer()
+        # Model name can be configured via XML
+        return SentenceTransformerCategorizer(get_attrib_or_err(find_single(node, "model"), "type"))
