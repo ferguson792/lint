@@ -56,7 +56,7 @@ class LmBasedRelevanceEstimator(RelevanceEstimator):
         self.context_separator: str = context_separator
     
     def estimate_relevance(self, topic: str, message: Message) -> tuple[int, str]:
-        # TODO Process response!
+        # TODO Process response instead of raising an error!
         # self.model.query("\n\n".join((self.relevance_prompt, message.title, message.description)))
         raise NotImplementedError()
     

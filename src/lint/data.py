@@ -13,12 +13,14 @@ ClassificationLevels = tuple[str, ...]
 # to different clusters depending on the generation batch number
 ClusterNumber = int
 
+# TODO Simplify to RSS_ATOM
 class SourceType(IntEnum):
     RSS = 1
     ATOM = 2
 
 class SourceStatus(IntEnum):
-    LIVE = 1
+    UNKNOWN = 1
+    LIVE = 2
 
 class ProcessingStatus(IntEnum):
     UN_PROCESSED = 0
@@ -83,6 +85,7 @@ class Brief:
     cutoff_date: datetime   # Cutoff date, stored as datetime
     viewback_ms: int        # Viewback timespan in milliseconds
     classification: ClassificationLevels
+    # TODO Include the Brief's focus (combination of topics), e.g. "disinformation / climate change / fossil fuels"
     # These two prompts are (for now) used globally for each brief;
     # however, this might lead to problems with the language model,
     # and it might be that prompts must be adjusted to each cluster,

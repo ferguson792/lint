@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<opml version="1.0">
+    <!-- Refer to OPML specification here: http://2005.opml.org/spec1.html -->
+	<head>
+		<title>Sample Sources</title>
+	</head>
+	<body>
+		<!-- This is here to check the relevance filtering (as an outlier) -->
+        <outline text="Natural World" title="Natural World">
+            <outline text="BBC Science and Environment" title="BBC Science and Environment" description="BBC" xmlUrl="http://feeds.bbci.co.uk/news/science_and_environment/rss.xml" htmlUrl="https://www.bbc.com/news/science_and_environment" language="en-GB" type="rss" classification="public" />
+        </outline>
+	</body>
+</opml>

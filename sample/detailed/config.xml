@@ -25,7 +25,7 @@
     <briefing>
         <parameters>
             <!-- The viewback time frame (from the current moment), in milliseconds. -->
-            <viewback-ms>172800000 <!-- 48 hours = 1000*60*60*48 ms --></viewback-ms>
+            <viewback-ms>172800000<!-- 48 hours = 1000*60*60*48 ms --></viewback-ms>
 
             <!-- Ignoring the publication date might be useful if such dates are faulty, for some reason. -->
             <ignore-publication-date>true</ignore-publication-date>
@@ -34,7 +34,8 @@
             <!-- (In the future, this might even become a flag, or processing status might be removed altogether.) -->
             <ignore-processing-status>true</ignore-processing-status>
 
-            <topics>
+            <!-- 'join-with' describes by which character individual topics should be combined into one large topic. -->
+            <topics join-with=" or ">
                 <topic description="disinformation" relevance-threshold="0"/>
             </topics>
         </parameters>

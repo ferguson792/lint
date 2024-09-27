@@ -1,3 +1,5 @@
+import logging
+
 from lint.data import Item, Source
 
 from typing import TypeVar
@@ -22,8 +24,10 @@ def split_by_uid_presence(elements: tuple[T, ...]) -> Result[tuple[list[T], dict
     
     return Ok((no_uid_elements, uid_elements))
 
-
+# TODO Rename simply to LocalStorage
 class StorageManager:
+    logger = logging.getLogger(__name__)
+
     db_filename: str
 
     def __init__(self, db_filename):
@@ -123,16 +127,22 @@ class StorageManager:
         '''
         INSERT_SOURCE = '''
         INSERT INTO source (uri, classification, type, status)
-        VALUES ?, ?, ?, ?
+        VALUES (?, ?, ?, ?)
         RETURNING uid;
         '''
         for source in no_uid_sources:
             serialized_classification = ",".join(source.classification)
             parameters = (source.uri, serialized_classification, source.type, source.status)
+            
             # Try and find a UID for the source
-            result_row = cursor.execute(FIND_ITEM, parameters)
-            if not result_row or result_row.rowcount == 0:
-                result_row = cursor.execute(INSERT_SOURCE, parameters)
+            StorageManager.logger.debug(f"Attempting to find source: {parameters}")
+            result_row = cursor.execute(FIND_ITEM, parameters).fetchall()
+            StorageManager.logger.debug(result_row)
+
+            if not result_row:
+                StorageManager.logger.debug("Source not found.")
+                StorageManager.logger.debug(f"Inserting source: {parameters}")
+                result_row = cursor.execute(INSERT_SOURCE, parameters).fetchall()
 
             (inserted_uid,) = result_row
             # print("UID:", inserted_uid[0])
