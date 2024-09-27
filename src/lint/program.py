@@ -199,9 +199,9 @@ class Lint(XmlConfigurable):
             classification=("PUBLIC",),
             topic_descriptions=brief_topics,
             config_notice="\n".join((
-                f"Relevance Estimation: {self.estimator.get_config_notice()}",
+                f"Relevance Est.: {self.estimator.get_config_notice()}",
                 f"Categorization: {self.categorizer.get_config_notice()}",
-                f"Summarization: {self.summarizer.get_config_notice()}"
+                f"Summarization:  {self.summarizer.get_config_notice()}"
             ))
         )
 
