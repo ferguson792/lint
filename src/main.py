@@ -17,49 +17,66 @@ from tkinter.ttk import Scrollbar
 def print_err(obj):
     print(obj, file=sys.stderr)
 
-# TODO This is a temporary function and should be replaced as soon as possible
-def dummy_brief_to_text(brief: Brief, summaries: tuple[Summary,...]) -> str:
-    summary = summaries[0]
-
-    # TODO: Problem: Item has no title.
-    # TODO: Move this to the Brief class
-
-    return (
-f"""================================================================================
-                                {brief.classification[0]}
+BRIEF_TEMPLATE="""
+================================================================================
+                                {classification}
 ================================================================================
                 LLM-Based Intelligence Analysis (LINT) Brief Regarding
                                 Climate Change
 
 
-This brief consists of {len(summaries)} summaries.
+This brief consists of {num_summaries} summaries.
 
 
-Information cut off: {brief.cutoff_date}
+Information cut off: {cutoff_date}
 
-Language model used for categorisation: Dummy
-Language model used for brief writing: Dummy
+Language model used for categorisation: TODO
+Language model used for brief writing: TODO
 
----------------------------------------------------------------------------------
---      START OF LINT SUMMARY. {datetime.now()}                                --
----------------------------------------------------------------------------------
-
-1. ({summary.classification}) {summary.title}
-Information cut off: {brief.cutoff_date}
-Source(s): {" ".join([f"[{index+1}]({summary.source_items[index].link})" for index in range(0,len(summary.source_items))])}
-
-{summary.summary}
-
----------------------------------------------------------------------------------
---       END OF LINT SUMMARY. {datetime.now()}                                 --
----------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--      START OF LINT SUMMARY. {datetime}                     --
+--------------------------------------------------------------------------------
+{summaries}
+--------------------------------------------------------------------------------
+--        END OF LINT SUMMARY. {datetime}                     --
+--------------------------------------------------------------------------------
 
 This LLM-generated brief does not replace human analysis. Neither guarantee nor
 liability is assumed for the correctness and completeness of the information.
 
 ================================================================================
-                                {brief.classification[0]}
-================================================================================""")
+                                {classification}
+================================================================================
+"""
+
+SUMMARY_TEMPLATE="""
+1. ({classification}) {title}
+Information cut off: {cutoff_date}
+Source Item(s): {items}
+
+{summary}
+"""
+
+# TODO This is a temporary ""function and should be replaced as soon as possible
+def dummy_brief_to_text(brief: Brief, summaries: tuple[Summary,...]) -> str:
+    
+    # TODO: Problem: Item has no title (for sources).
+
+    return BRIEF_TEMPLATE.format(
+        classification="//".join(brief.classification),
+        num_summaries=len(summaries),
+        datetime=datetime.now(),
+        cutoff_date=brief.cutoff_date,
+        summaries="".join([SUMMARY_TEMPLATE.format(
+            classification=summary.classification,
+            title=summary.title,
+            cutoff_date=brief.cutoff_date,
+            items=" ".join([f"[{item.uid}]" for item in summary.source_items]),
+            summary=summary.summary
+            ) for summary in summaries]),
+        )
+
+    return output
 
 def display_text_gui(text: str):
     root = Tk()

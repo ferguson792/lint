@@ -22,17 +22,9 @@ _DEBUG_OUTPUT_DEFAULT_VALUE: bool = False
 class Lint(XmlConfigurable):
     logger = logging.getLogger(__name__)
 
+    # TODO Wouldn't it be better if the StorageManager controlled these?
     sources: tuple[Source,...] = []
     items: list[Item] = []
-
-    # TODO Wouldn't it be better if the StorageManager controlled the items?
-    store: StorageManager = StorageManager("test.db")
-    
-    qi: QuarantineIndicator
-    briefing_parameters: BriefingParameters
-    categorizer: MessageCategorizer
-    estimator: RelevanceEstimator
-    summarizer: MessageSummarizer
 
     def __init__(self,
                  quarantine_indicator: QuarantineIndicator,
@@ -45,11 +37,15 @@ class Lint(XmlConfigurable):
         # (This has to be the first instruction, because a  lot of logging will happen during the configuration...)
         logging.basicConfig(encoding='utf-8', level=(logging.DEBUG if debug_output else logging.INFO), format=_LOG_FORMAT)
 
+        # TODO Wouldn't it be better if the StorageManager controlled the items?
+        self.store: StorageManager = StorageManager("test.db")
+    
+
         # Set the processor objects
-        self.qi = quarantine_indicator
-        self.estimator = estimator
-        self.categorizer = categorizer
-        self.summarizer = summarizer
+        self.qi: QuarantineIndicator = quarantine_indicator
+        self.estimator: RelevanceEstimator = estimator
+        self.categorizer: MessageCategorizer = categorizer
+        self.summarizer: MessageSummarizer = summarizer
 
         # Briefing
         self.briefing_parameters = briefing_parameters
@@ -164,37 +160,51 @@ class Lint(XmlConfigurable):
         # Preprocess items and store in temporary message database
         messages = self._preprocess_items(cutoff_date, params.viewback_ms, params.ignore_pub_date, params.ignore_processing_status)
         
-        # Create a Brief for each topic.        # TODO Should it be like that?
+        # In this list is stored whether a message is to be used
+        message_is_relevant = [False] * len(messages)
+
+        # For each topic ...
         for topic in params.topics:
             topic_desc = topic.description
 
-            # Estimate relevance (with context) and cluster
-            for message in messages:
-                relevance, relevance_context = self.estimator.estimate_relevance(topic_desc, message)
-                message.relevance = relevance
-                message.relevance_context = relevance_context
+            # ... see whether a message is relevant
+            for i, message in enumerate(messages):
+                # Check if a message might be relevant
+                # (but only if it has not already been determined to be relevant)
+                if not message_is_relevant[i]:
+                    # Estimate relevance (with context)
+                    relevance, relevance_context = self.estimator.estimate_relevance(topic_desc, message)
+                    # We override the relevance if the message has been previously regarded as not relevant
+                    message.relevance = relevance
+                    message.relevance_context = relevance_context
+                    
+                    # If the estimated relevance is greater or equal to the specified threshold for the topic,
+                    # it is deemed to be relevant for this brief
+                    message_is_relevant[i] = relevance >= topic.relevance_threshold
+        
+        relevant_messages = [message for i, message in enumerate(messages) if message_is_relevant[i]]
 
-                # TODO Replace this dummy statement with real clustering
-                message.cluster = 0
-            # TODO Update result in storage
-            # TODO Cluster, based on topic vector (with relevance)
-            # TODO Update result in storage
-            # TODO It might be beneficial to adjust relevance for each cluster?
-
-            # TODO The relevance threshold should also be stored...
-            brief = Brief(
-                uid=None,
-                cutoff_date=cutoff_date, viewback_ms=params.viewback_ms,
-                classification=("PUBLIC",),
-                prompt_relevance=self.estimator.get_prompt(topic_desc), prompt_summary=self.summarizer.get_prompt(topic_desc)
-            )
-            # Create summaries for each cluster
-            title, summary_text = self.summarizer.summarize(topic_desc, messages)
+        # TODO Cluster, based on topic vector (with relevance)
+        clusters = self.categorizer.cluster(relevant_messages)
+        
+        # TODO The relevance threshold should also be stored...
+        brief = Brief(
+            uid=None,
+            cutoff_date=cutoff_date, viewback_ms=params.viewback_ms,
+            classification=("PUBLIC",),
+            prompt_relevance=self.estimator.get_prompt(topic_desc), prompt_summary=self.summarizer.get_prompt(topic_desc)
+        )
+        # Create summaries for each cluster
+        summaries = []
+        for cluster in clusters:
+            title, summary_text = self.summarizer.summarize(topic_desc, cluster)
             summary = Summary(
                 uid=None, brief=brief, generation_date=(time.time_ns() // 1_000_000),
+                # TODO Resolve classification by some mechanism...
                 title=title, summary=summary_text, cluster=0, classification="PUBLIC",
-                source_items=self.items, issued=False)
+                source_items=tuple([message.item for message in cluster]), issued=False)
+            summaries.append(summary)
 
-        # TODO Create and store brief in database
+        # TODO Store brief in database
 
-        return (brief, (summary,))
+        return (brief, tuple(summaries))

@@ -31,8 +31,11 @@
             <!-- (In the future, this might even become a flag, or processing status might be removed altogether.) -->
             <ignore-processing-status>true</ignore-processing-status>
 
+            <!-- Since the dummy processors are very quick, we can specify a lot of topics. -->
             <topics>
                 <topic description="disinformation" relevance-threshold="0"/>
+                <topic description="climate change" relevance-threshold="0"/>
+                <topic description="fossil fuels" relevance-threshold="0"/>
             </topics>
         </parameters>
 
@@ -41,7 +44,9 @@
         </relevance>
 
         <categorization>
-            <processor type="dummy"/>
+            <!-- TODO Revert to "dummy" as soon as sentence transformer testing is over. -->
+            <!-- TODO Allow specifying the model in the processor... -->
+            <processor type="sentence-transformer"/>
         </categorization>
 
         <!-- The following types are available: lm-based, dummy -->

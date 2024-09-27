@@ -79,12 +79,21 @@ class Message:
     topic_vector: Optional[TopicVector]
     cluster: Optional[ClusterNumber]
 
+    def text(self) -> str:
+        """
+        Returns the title and description of the Message,
+        separated by two line breaks.
+        This method exists because this operation is used quite often
+        during processing.
+        """
+        return "\n\n".join((self.title, self.description))
+
 @dataclass
 class Brief:
     uid: Optional[BriefId]
     cutoff_date: datetime   # Cutoff date, stored as datetime
     viewback_ms: int        # Viewback timespan in milliseconds
-    classification: ClassificationLevels
+    classification: ClassificationLevels    # Classification levels will probably be stored in their own table...
     # TODO Include the Brief's focus (combination of topics), e.g. "disinformation / climate change / fossil fuels"
     # These two prompts are (for now) used globally for each brief;
     # however, this might lead to problems with the language model,
@@ -92,6 +101,9 @@ class Brief:
     # and thereby also stored for each cluster. This would mean that
     # the prompts would have to be stored for each summary,
     # because one cluster corresponds to one summary.
+    # TODO Brief should include more metadata, i.e. the full processor _signature_ (type + parameters)
+    # for all stages (categorization, etc.)
+    # TODO Store number of clusters
     prompt_relevance: str
     prompt_summary: str
     # TODO Include language models used for summary and brief writing.
