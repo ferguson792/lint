@@ -3,6 +3,8 @@ from typing import Optional, Self
 from dataclasses import dataclass
 from datetime import datetime
 
+from lint.harmonization import Harmonizable, Harmonizer
+
 SourceId = int
 ItemId = int
 MessageId = int
@@ -21,6 +23,7 @@ class SourceType(IntEnum):
 class SourceStatus(IntEnum):
     UNKNOWN = 1
     LIVE = 2
+    DEAD = 3
 
 class ProcessingStatus(IntEnum):
     UN_PROCESSED = 0
@@ -42,7 +45,7 @@ class TopicVector:
     value: tuple[float, ...]
 
 @dataclass
-class Source:
+class Source(Harmonizable):
     uid: Optional[SourceId]
     uri: str
     classification: ClassificationLevels
@@ -50,7 +53,7 @@ class Source:
     status: SourceStatus
 
 @dataclass
-class Item:
+class Item(Harmonizable):
     """
     An Item is the object received from the source it. It contains all the metadata
     as well as the unprocessed, i.e. raw, message content.
@@ -91,24 +94,15 @@ class Message:
 @dataclass
 class Brief:
     uid: Optional[BriefId]
-    cutoff_date: datetime   # Cutoff date, stored as datetime
-    viewback_ms: int        # Viewback timespan in milliseconds
+    cutoff_date: datetime                   # Cutoff date, stored as datetime
+    viewback_ms: int                        # Viewback timespan in milliseconds
     classification: ClassificationLevels    # Classification levels will probably be stored in their own table...
-    # TODO Include the Brief's focus (combination of topics), e.g. "disinformation / climate change / fossil fuels"
-    topic_descriptions: str
-    # These two prompts are (for now) used globally for each brief;
-    # however, this might lead to problems with the language model,
-    # and it might be that prompts must be adjusted to each cluster,
-    # and thereby also stored for each cluster. This would mean that
-    # the prompts would have to be stored for each summary,
-    # because one cluster corresponds to one summary.
-    # TODO Brief should include more metadata, i.e. the full processor _signature_ (type + parameters)
-    # for all stages (categorization, etc.)
-    # TODO Store number of clusters
-
-    config_notice: str
+    topic_descriptions: str                 # The Brief's focus (topic descriptions)
+    num_clusters: int                       # Number of clusters
+    config_notice: str                      # The configuration notice      # TODO Include more and more granular metadata
 
     # TODO Create a helper method to create from briefing parameters?
+
 
 @dataclass
 class Summary:

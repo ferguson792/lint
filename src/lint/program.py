@@ -198,6 +198,7 @@ class Lint(XmlConfigurable):
             cutoff_date=cutoff_date, viewback_ms=params.viewback_ms,
             classification=("PUBLIC",),
             topic_descriptions=brief_topics,
+            num_clusters=len(clusters),
             config_notice="\n".join((
                 f"Relevance Est.: {self.estimator.get_config_notice()}",
                 f"Categorization: {self.categorizer.get_config_notice()}",

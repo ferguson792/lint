@@ -1,5 +1,0 @@
-#!/bin/bash
-
-OLDPWD=`pwd`
-cd $1
-$OLDPWD/local-venv/bin/python3 $OLDPWD/src/main.py
