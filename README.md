@@ -5,12 +5,10 @@
 
 For detailed documentation, see [`docs/README.md`](docs/README.md).
 
-At the moment, dummy processors are used to speed up development and enable rapid prototyping.
-Nevertheless, the program already draws in and processes current information, meaning the summaries change
-with the progress of time and new information drawn from the single testing source (a BBC newsfeed
-about "Science and Environment"). The date for information-cutoff is always the current moment
-(Python `datetime.now()`). The viewback timespan is always a period of 48 hours, from the current moment
-(i.e. the last two days are being summarized).
+LINT has been developed on and optimized for Linux systems.
+
+## How LINT works
+TODO
 
 ## Running LINT
 
@@ -22,29 +20,65 @@ To run LINT, you need to have the following components installed on your system:
 * [Make](https://en.wikipedia.org/wiki/Make_(software))
 
 ### Python Libraries
-> For more information about libraries, view [`docs/libraries.md`](docs/libraries.md).
+> For more information about libraries, view [`docs/dependencies.md`](docs/dependencies.md).
 
 Before running LINT, make sure you have the required libraries installed.
-To install them via `pip`, run
+
+LINT installs these libraries in a local Python virtual environment for testing purposes;
+however, if you wish to run them outside of this environment, you need to install the libraries
+on your system, e.g. via `pip`.
+
+The build system can install these dependencies automatically in a local Python virtual environemnt (`venv`), and will attempt to do
+so if you run LINT through the build system.
+
+To install dependencies automatically for local testing, execute
 ```sh
-$ pip install result requests feedparser
-```
-and
-```sh
-$ pip install -U sentence-transformers
+$ make local-venv
 ```
 
-If you want to query Mistral's online API, you will need to generate and store an API key and install the necessary client as well:
+To purge the local venv (e.g. for a clean re-installation), execute
 ```sh
-$ pip install mistralai
+$ make purge-venv
 ```
+
+> **NOTE:** Reinstalling all the required libraries is a relatively costly operation in terms of time and bandwith required, so purging the local venv should be a last resort. If the local venv is misconfigured, try fixing the problem manually or, if it persists, consider filing a bug report.
+
+If you want to query Mistral's online API, you will need to generate and store an API key and install the necessary client library as well.
 See <https://github.com/mistralai/client-python> for more information.
 
 ### Running the program
 To run LINT, simply execute
 ```sh
-$ make run
+$ make run [working directory]
 ```
+An optional working directory can be specified, otherwise the current working directory is used.
+
+### Running sample configurations
+This repository includes two example configurations in the `sample` sub-directory: "detailed", which includes
+a demonstration using Mistral's online API (but requires API keys to be inserted first) and "dummy", which
+uses dummy versions of all processing stages.
+
+To run them in this repository, execute
+```
+$ make run-sample-detailed
+```
+or
+```
+$ make run-sample-dummy
+```
+respectively.
+
+## Packaging LINT
+To create a TAR archive, execute
+```
+$ make dist
+```
+
+The archive can be found under `build/dist/lint-<version>.tar.gz`.
+
+## Configuration
+LINT is divided into multiple processing stages; each can be configured individually.
+See `docs/configuration.md` for more details.
 
 ## Sample output
 ```txt
