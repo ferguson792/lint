@@ -1,6 +1,7 @@
 from typing import ClassVar
 import xml.etree.ElementTree as ET
 import logging
+import re
 
 from lint.data import Message
 from lint.processors import RelevanceEstimator, MessageSummarizer, Processor
@@ -50,12 +51,74 @@ class LanguageModel(Processor):
         return properties
 
 class LmBasedRelevanceEstimator(RelevanceEstimator):
+    class ContextSeparator(XmlConfigurable):
+        """
+        This inner class exists because the user can decide whether
+        to split context based on a sequence of characters or a regular expression.
+        """
+
+        logger = logging.getLogger(__name__)
+        ATTRIB_REGEX = "regex"
+
+        def __init__(self, separator: str | re.Pattern):
+            self.separator: str | re.Pattern = separator
+
+        def split(self, response: str) -> tuple[str, str]:
+            parts = []
+            # Split response based on context separator
+            #  (the semantics are different for str and regular expressions)
+            if isinstance(self.separator, str):
+                parts = response.split(self.separator, maxsplit=2)
+            elif isinstance(self.separator, re.Pattern):
+                parts = self.separator.split(response, maxsplit=2)
+            else:
+                raise TypeError(f'Unknown separator type: {type(self.separator)}')
+
+            # Raise an error if the response is malformatted
+            if len(parts) < 2:
+                raise ModelOutputError(f"Model response contains no context separator: {response}")
+            elif not parts[0] or parts[0].isspace():
+                # If the first part is empty or blank, try again.
+                #   Maybe the output is formatted like
+                #       "$$$ 10 $$$ Explanation"
+                #   (This has happened during testing.)
+
+                try:
+                    return self.split(parts[1])
+                except ModelOutputError as err:
+                    raise ModelOutputError(f"Model response contains no valid between separators: {response}", err)
+            else:
+                return tuple(parts)
+
+        #override
+        @classmethod
+        def get_xml_tag(cls) -> str:
+            return "context-separator"
+        
+        #override
+        @classmethod
+        def from_xml(cls, node: ET.Element) -> Self:
+            # Default value of "regex" is False, so if it is absent, don't use regular expressions
+            if cls.ATTRIB_REGEX in node.attrib and text_to_bool(node.attrib[cls.ATTRIB_REGEX]):
+                # Use regular expressions
+                cls.logger.debug(f"Compiling regular expression: {node.text}")
+                
+                pattern = re.compile(node.text)                
+
+                cls.logger.debug(f"Compiled Pattern: {pattern}")
+                
+                return LmBasedRelevanceEstimator.ContextSeparator(pattern)
+            else:
+                # Use simple character sequences
+                return LmBasedRelevanceEstimator.ContextSeparator(node.text)
+
+
     logger = logging.getLogger(__name__)
 
-    def __init__(self, model: LanguageModel, relevance_prompt: str, context_separator: str):
+    def __init__(self, model: LanguageModel, relevance_prompt: str, context_separator: ContextSeparator):
         self.model: LanguageModel = model
         self.relevance_prompt: Prompt = relevance_prompt
-        self.context_separator: str = context_separator
+        self.context_separator: ContextSeparator = context_separator
     
     def estimate_relevance(self, topic: str, message: Message) -> tuple[int, str]:
         response = self.model.query(
@@ -64,23 +127,18 @@ class LmBasedRelevanceEstimator(RelevanceEstimator):
                 message.title, message.description
                 )))
         
-        # Split response based on the context separator and raise an error if the response is malformatted
-        parts = response.split(self.context_separator)
+        # Split response based on the context separator
+        # (and raise an error if the response is malformatted)
+        parts = self.context_separator.split(response)
 
-        if len(parts) != 2:
-            if len(parts) < 2:
-                raise ModelOutputError(f"Model response contains no context separator: {response}") 
-            else:   # len(parts) > 2
-                raise ModelOutputError(f"Model response contains more than one context separator: {response}")
-        else:
-            try:
-                score = int(parts[0])
-                context = parts[1]
+        try:
+            score = int(parts[0])
+            context = parts[1]
 
-                return score, context
-            except ValueError as err:
-                logger.error(f"Bad response: {response}")
-                raise ModelOutputError(f"Model response score is not an integer: {parts[0]}", err)
+            return score, context
+        except ValueError as err:
+            logger.error(f"Bad response: {response}")
+            raise ModelOutputError(f"Model response score is not an integer: {parts[0]}", err)
 
     #override
     def get_prompt(self, topic: str):
@@ -100,7 +158,7 @@ class LmBasedRelevanceEstimator(RelevanceEstimator):
         return LmBasedRelevanceEstimator(
             model = instantiate_type_from_xml(find_single(node, LanguageModel.get_xml_tag()), LanguageModel.available_types),
             relevance_prompt = Prompt.from_xml(find_single(node, Prompt.get_xml_tag())),
-            context_separator = find_single(node, "context-separator").text
+            context_separator = LmBasedRelevanceEstimator.ContextSeparator.from_xml(find_single(node, LmBasedRelevanceEstimator.ContextSeparator.get_xml_tag()))
         )
 
 class LmBasedMessageSummarizer(MessageSummarizer):

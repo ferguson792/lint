@@ -43,12 +43,13 @@
         <relevance>
             <processor type="lm-based">
                 <model type="mistral-online">
-                    <property key="auth-token"><!-- INSERT API KEY HERE --></property>
+                    <property key="auth-token">2bmkOa3v3vA4vzDzpRVDx2OLt6kKOc1k<!-- INSERT API KEY HERE --></property>
                     <property key="name">open-mistral-nemo</property>
                     <property key="temperature">0.5</property>
                 </model>
 
-                <context-separator>$$$</context-separator>
+                <!-- Default value of regex is "false", in which case the character sequence is used to split score from context. -->
+                <context-separator regex="true">\$+?</context-separator>
 
                 <prompt>Do the following articles relate to <insert-topic/>? Only provide a number between 0 and 100 as an answer. 0 means the article does not relate to <insert-topic/> at all. 100 means <insert-topic/> is fully covered in the article. Provide an explanation after three $$$ dollar signs.</prompt>
             </processor>
@@ -65,7 +66,7 @@
             <processor type="lm-based">
                 <head>
                     <model type="mistral-online">
-                        <property key="auth-token"><!-- INSERT API KEY HERE --></property>
+                        <property key="auth-token">2bmkOa3v3vA4vzDzpRVDx2OLt6kKOc1k<!-- INSERT API KEY HERE --></property>
                         <property key="name">open-mistral-nemo</property>
                         <property key="temperature">0.5</property>
                     </model>
@@ -75,7 +76,7 @@
 
                 <body>
                     <model type="mistral-online">
-                        <property key="auth-token"><!-- INSERT API KEY HERE --></property>
+                        <property key="auth-token">2bmkOa3v3vA4vzDzpRVDx2OLt6kKOc1k<!-- INSERT API KEY HERE --></property>
                         <property key="name">open-mistral-nemo</property>
                         <property key="temperature">0.5</property>
                     </model>

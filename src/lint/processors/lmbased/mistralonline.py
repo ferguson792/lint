@@ -27,6 +27,7 @@ class MistralClientModel(LanguageModel):
         self.client = Mistral(api_key=api_key)
 
     def query(self, content: str) -> str:
+        self.logger.debug(f"Query: {content}")
         chat_response = self.client.chat.complete(
             model=self.model_name,
             temperature=self.temperature,
@@ -37,7 +38,9 @@ class MistralClientModel(LanguageModel):
                 }
             ]
         )
-        return chat_response.choices[0].message.content
+        response = chat_response.choices[0].message.content
+        self.logger.debug(f"Response: {response}")
+        return response
 
     #override
     def get_config_notice(self) -> str:
