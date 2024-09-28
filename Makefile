@@ -6,7 +6,9 @@ COPY = cp
 
 SRC_DIR = src
 BUILD_DIR = build
-BUILD_BIN_DIR = $(BUILD_DIR)/bin
+BUILD_DIST_DIR = $(BUILD_DIR)/dist
+BIN_SUBDIR=bin
+BUILD_BIN_DIR = $(BUILD_DIR)/$(BIN_SUBDIR)
 BUILD_SRC_PREFIX = py-
 BUILD_SRC_DIR = $(BUILD_BIN_DIR)/$(BUILD_SRC_PREFIX)$(SRC_DIR)
 
@@ -55,6 +57,8 @@ clean:
 local-env:
 	# TODO Create local build environment (under .local-venv)
 
-# TODO dist → same as <lint-$version.tar.gz>
+dist: build
+	$(MK_INT_DIR) $(BUILD_DIST_DIR)
+	cd $(BUILD_DIR) && tar -czf ../$(BUILD_DIST_DIR)/lint-$(LINT_VERSION).tar.gz $(BIN_SUBDIR)
 
-.PHONY: run test-rss run-sample-dummy run-sample-detailed clean local-env
+.PHONY: run test-rss run-sample-dummy run-sample-detailed build dist clean local-env
